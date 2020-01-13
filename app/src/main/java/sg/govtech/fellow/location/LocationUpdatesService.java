@@ -109,6 +109,9 @@ public class LocationUpdatesService extends Service {
             // Create the channel for the notification
             NotificationChannel mChannel =
                     new NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT);
+            mChannel.enableLights(false);
+            mChannel.enableVibration(true);
+            mChannel.setVibrationPattern(new long[]{ 0L });
 
             // Set the Notification Channel for the Notification Manager.
             mNotificationManager.createNotificationChannel(mChannel);
@@ -289,6 +292,7 @@ public class LocationUpdatesService extends Service {
                 .addAction(R.drawable.ic_cancel, getString(R.string.remove_location_updates),
                         servicePendingIntent)
                 .setContentText(text)
+//                .setVibrate(new long[]{0L})
                 .setContentTitle(Utils.getLocationTitle(this))
                 .setOngoing(true)
                 .setPriority(Notification.PRIORITY_HIGH)
