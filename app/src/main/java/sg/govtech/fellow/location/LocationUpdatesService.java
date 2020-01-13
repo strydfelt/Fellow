@@ -70,7 +70,7 @@ public class LocationUpdatesService extends Service {
 
     private final IBinder mBinder = new LocalBinder();
 
-    public static final String COMMAND_KEY = PACKAGE_NAME + "CMD";
+    public static final String COMMAND_KEY = PACKAGE_NAME + "_CMD";
     public static final String ACTION_START = PACKAGE_NAME + "_START";
     public static final String ACTION_STOP = PACKAGE_NAME + "_STOP";
 
@@ -80,10 +80,10 @@ public class LocationUpdatesService extends Service {
     @Override
     public void onCreate() {
         Log.d(TAG, "Creating service");
-        beginTracking();
+        setupTracking();
     }
 
-    private void beginTracking(){
+    private void setupTracking(){
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         mLocationCallback = new LocationCallback() {
@@ -118,12 +118,10 @@ public class LocationUpdatesService extends Service {
     private void checkPermissions(){
         String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION};
         if (EasyPermissions.hasPermissions(this, perms)) {
-
-
+            Utils.setRequestingLocationUpdates(this, true);
         } else {
             // Do not have permissions, request them now
-
-
+            Log.w(TAG, "Todo: request permission from service");
         }
     }
 
@@ -132,19 +130,44 @@ public class LocationUpdatesService extends Service {
         Log.i(TAG, "Service started");
 
         //check for permissions?
-//        checkPermissions();
+        checkPermissions();
 
         //check the command flag?
         String cmd = intent.getStringExtra(COMMAND_KEY);
         if(cmd != null){
             Log.i(TAG, "Command is:" + cmd);
+
+            switch( cmd ){
+                case ACTION_START:
+                    if (Utils.requestingLocationUpdates(this)) {
+                        Log.i(TAG, "Starting foreground service");
+                        startForeground(NOTIFICATION_ID, getNotification());
+
+                        try {
+                            mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                                    mLocationCallback, Looper.myLooper());
+                        } catch (SecurityException unlikely) {
+                            Utils.setRequestingLocationUpdates(this, false);
+                            Log.e(TAG, "Lost location permission. Could not request updates. " + unlikely);
+                        }
+
+                    }
+                    else{
+                        Log.i(TAG, "Not requesting updates??");
+                    }
+                    break;
+                default:
+                    Log.i(TAG, "Not starting service");
+            }
         }
+
 
         boolean startedFromNotification = intent.getBooleanExtra(EXTRA_STARTED_FROM_NOTIFICATION,
                 false);
 
         // We got here because the user decided to remove location updates from the notification.
         if (startedFromNotification) {
+            Log.i(TAG, "Stopping self");
             removeLocationUpdates();
             stopSelf();
         }
@@ -164,8 +187,8 @@ public class LocationUpdatesService extends Service {
         // and binds with this service. The service should cease to be a foreground service
         // when that happens.
         Log.i(TAG, "in onBind()");
-        stopForeground(true);
-        mChangingConfiguration = false;
+//        stopForeground(true);
+//        mChangingConfiguration = false;
         return mBinder;
     }
 
@@ -175,8 +198,8 @@ public class LocationUpdatesService extends Service {
         // and binds once again with this service. The service should cease to be a foreground
         // service when that happens.
         Log.i(TAG, "in onRebind()");
-        stopForeground(true);
-        mChangingConfiguration = false;
+//        stopForeground(true);
+//        mChangingConfiguration = false;
         super.onRebind(intent);
     }
 

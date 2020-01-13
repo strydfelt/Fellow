@@ -21,7 +21,7 @@ class Utils {
      */
     static boolean requestingLocationUpdates(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
-                .getBoolean(KEY_REQUESTING_LOCATION_UPDATES, false);
+                .getBoolean(KEY_REQUESTING_LOCATION_UPDATES, true);
     }
 
     /**
