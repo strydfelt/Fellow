@@ -2,7 +2,9 @@ package sg.govtech.fellow;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.telephony.CellIdentityGsm;
@@ -31,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -90,15 +93,7 @@ public class MainActivity extends AppCompatActivity {
 
         String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION};
         if (EasyPermissions.hasPermissions(this, perms)) {
-            JSONArray cellsV1 = getCellInfo(this);
-            try {
-                Log.d(TAG, cellsV1.toString(2));
-                ((TextView)findViewById(R.id.output)).setText(cellsV1.toString(2));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            getNetworksJSON();
+           requestLocationSettingAndExecute();
 
         } else {
             // Do not have permissions, request them now
@@ -190,21 +185,6 @@ public class MainActivity extends AppCompatActivity {
 
             String json = gson.toJson(cellInfo);
             networkArray.put(json);
-
-            /*
-            if(cellInfo instanceof CellInfoLte){
-                CellInfoLte lte = (CellInfoLte)cellInfo;
-            }
-            else if (cellInfo instanceof CellInfoWcdma){
-                CellInfoWcdma cellInfoWcdma = (CellInfoWcdma) cellInfo;
-//                sigLev = cellInfoWcdma.getCellSignalStrength().getDbm();
-//                asu = cellInfoWcdma.getCellSignalStrength().getAsuLevel();
-//                rssi = -113 + 2 * asu;
-//                sigQual = 10 * Math.log10(sigLev / rssi); //EcNo
-//                cellID = cellInfoWcdma.getCellIdentity().getCid();
-            }
-            */
-
         }
 
         try {
@@ -217,42 +197,34 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private JSONObject grabNetworkV2(){
-        JSONObject params = new JSONObject();
-        TelephonyManager tel = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 
-// Type of the network
-        int phoneTypeInt = tel.getPhoneType();
-        String phoneType = null;
-        phoneType = phoneTypeInt == TelephonyManager.PHONE_TYPE_GSM ? "gsm" : phoneType;
-        phoneType = phoneTypeInt == TelephonyManager.PHONE_TYPE_CDMA ? "cdma" : phoneType;
 
-        try {
-            if (phoneType != null) {
-                params.put("radioType", phoneType);
+    private void requestLocationSettingAndExecute(){
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if( !locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ) {
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.gps_not_found_title)  // GPS not found
+                    .setMessage(R.string.gps_not_found_message) // Want to enable?
+                    .setPositiveButton(R.string.take_me_there, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                        }
+                    })
+                    .setCancelable(false)
+                    .setNegativeButton(R.string.no_thanks, null)
+                    .show();
+        }
+        else{
+            JSONArray cellsV1 = getCellInfo(this);
+            try {
+                Log.d(TAG, cellsV1.toString(2));
+                ((TextView)findViewById(R.id.output)).setText(cellsV1.toString(2));
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {}
 
-        /*
-         * The below code doesn't work I think.
-         */
-        JSONArray cellList = new JSONArray();
-        List<NeighboringCellInfo> neighCells = tel.getNeighboringCellInfo();
-        for (int i = 0; i < neighCells.size(); i++) {
-            try {
-                JSONObject cellObj = new JSONObject();
-                NeighboringCellInfo thisCell = neighCells.get(i);
-                cellObj.put("cellId", thisCell.getCid());
-                cellList.put(cellObj);
-            } catch (Exception e) {}
+            getNetworksJSON();
         }
-        if (cellList.length() > 0) {
-            try {
-                params.put("cellTowers", cellList);
-            } catch (JSONException e) {}
-        }
-
-        return params;
     }
 
     void startLocationService() {
