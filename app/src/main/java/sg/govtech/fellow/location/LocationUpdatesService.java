@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
@@ -33,7 +34,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import pub.devrel.easypermissions.EasyPermissions;
 import sg.govtech.fellow.MainActivity;
 import sg.govtech.fellow.R;
-
+import sg.govtech.fellow.permissions.RequestLocationPermissionActivity;
 
 
 //taken form https://github.com/android/location-samples/blob/432d3b72b8c058f220416958b444274ddd186abd/LocationUpdatesForegroundService/app/src/main/java/com/google/android/gms/location/sample/locationupdatesforegroundservice/LocationUpdatesService.java
@@ -43,11 +44,9 @@ public class LocationUpdatesService extends Service {
     private LocationCallback mLocationCallback;
     private LocationRequest mLocationRequest;
 
-    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
+    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 3*60*1000;
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
-
-
 
     private Handler mServiceHandler;
     private static final String TAG = LocationUpdatesService.class.getSimpleName();
@@ -118,14 +117,39 @@ public class LocationUpdatesService extends Service {
         }
     }
 
-    private void checkPermissions(){
+    private boolean hasPermissions(){
         String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION};
         if (EasyPermissions.hasPermissions(this, perms)) {
             Utils.setRequestingLocationUpdates(this, true);
+            return true;
         } else {
             // Do not have permissions, request them now
             Log.w(TAG, "Todo: request permission from service");
+            return false;
         }
+    }
+
+
+    private boolean isLocationSettingOn(){
+        LocationManager lm = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
+        boolean gps_enabled = false;
+        boolean network_enabled = false;
+
+        try {
+            gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        } catch(Exception ex) {}
+
+        try {
+            network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        } catch(Exception ex) {}
+
+        return gps_enabled;
+    }
+
+    private void acquirePermsAndSets(){
+        Intent intent = new Intent(this, RequestLocationPermissionActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 
     @Override
@@ -133,7 +157,24 @@ public class LocationUpdatesService extends Service {
         Log.i(TAG, "Service started");
 
         //check for permissions?
-        checkPermissions();
+        if(!hasPermissions()){
+            Log.i(TAG, "no permission");
+
+            //start location permission activity
+            acquirePermsAndSets();
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+
+        //check for location setting
+        if(!isLocationSettingOn()){
+            Log.i(TAG, "no setting");
+
+            //start location setting activity
+            acquirePermsAndSets();
+            stopSelf();
+            return START_NOT_STICKY;
+        }
 
         //check the command flag?
         String cmd = intent.getStringExtra(COMMAND_KEY);
@@ -286,7 +327,7 @@ public class LocationUpdatesService extends Service {
         PendingIntent activityPendingIntent = PendingIntent.getActivity(this, 0,
                 new Intent(this, MainActivity.class), 0);
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .addAction(R.drawable.ic_launch, getString(R.string.launch_activity),
                         activityPendingIntent)
                 .addAction(R.drawable.ic_cancel, getString(R.string.remove_location_updates),
@@ -301,9 +342,9 @@ public class LocationUpdatesService extends Service {
                 .setWhen(System.currentTimeMillis());
 
         // Set the Channel ID for Android O.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            builder.setChannelId(CHANNEL_ID); // Channel ID
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            builder.setChannelId(CHANNEL_ID); // Channel ID
+//        }
 
         return builder.build();
     }

@@ -35,7 +35,7 @@
         </receiver>
 
         <activity android:name=".location.LocationActivity"/>
-        <activity android:name=".permissions.RequestLocationPermissionActivity"/>
+        <activity android:name=".permissions.RequestLocationPermissionActivity" android:theme="@style/Theme.AppCompat.Transparent.NoActionBar"/>
 
         <service android:name=".location.LocationUpdatesService"></service>
 

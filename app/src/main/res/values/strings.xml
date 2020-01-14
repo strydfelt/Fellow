@@ -4,6 +4,9 @@
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
 
+    <string name="take_me_there">Take me there!</string>
+    <string name="no_thanks">No thanks!</string>
+
     <string name="launch_activity">Launch activity</string>
     <string name="location_unknown">Location unknown</string>
     <string name="location_updates_label">Location Updates</string>
@@ -20,5 +23,8 @@
 
 
     <string name="permission_location_rationale">Fellow needs your location to observe your permission</string>
+
+    <string name="gps_not_found_title">Location Setting is Off</string>
+    <string name="gps_not_found_message">This device\'s location settings are off. Please turn it on or the app will not function. Go to Settings to turn it on?</string>
 
 </resources>
