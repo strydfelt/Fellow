@@ -1,9 +1,11 @@
 package sg.govtech.fellow.permissions;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.location.LocationManager;
 import android.os.Bundle;
 
@@ -34,9 +36,10 @@ public class RequestLocationPermissionActivity extends AppCompatActivity {
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
 
-    private void requestLocationSettingAndExecute(){
+    private void requestLocationSettingAndExecute() {
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if( !locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ) {
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            registerReceiver(receiver, filter);
             new AlertDialog.Builder(this)
                     .setTitle(R.string.gps_not_found_title)  // GPS not found
                     .setMessage(R.string.gps_not_found_message) // Want to enable?
@@ -48,8 +51,7 @@ public class RequestLocationPermissionActivity extends AppCompatActivity {
                     .setCancelable(false)
                     .setNegativeButton(R.string.no_thanks, null)
                     .show();
-        }
-        else{
+        } else {
             //start the service
             startLocationService();
         }
@@ -113,4 +115,28 @@ public class RequestLocationPermissionActivity extends AppCompatActivity {
                     RC_LOCATION, perms);
         }
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(receiver);
+    }
+
+    private final IntentFilter filter =
+            new IntentFilter(LocationManager.MODE_CHANGED_ACTION);
+
+    private final BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            if (LocationManager.MODE_CHANGED_ACTION.equals(intent.getAction())){
+                boolean settingOn = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+                if(settingOn){
+                    RequestLocationPermissionActivity.this.startLocationService();
+                }
+            }
+        }
+    };
+
+
 }

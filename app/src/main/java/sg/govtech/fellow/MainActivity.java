@@ -176,14 +176,16 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "num cells: " + cells.size());
 
         GsonBuilder builder = new GsonBuilder();
-//        builder.setPrettyPrinting();
+        builder.setPrettyPrinting();
         Gson gson = builder.create();
 
         JSONArray networkArray = new JSONArray();
 
         for (CellInfo cellInfo : cells) {
+            Log.d(TAG, cellInfo.toString());
+            String json = gson.toJson(cellInfo, CellInfo.class);
+            Log.d(TAG, json);
 
-            String json = gson.toJson(cellInfo);
             networkArray.put(json);
         }
 
