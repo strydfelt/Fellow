@@ -58,6 +58,7 @@ public class LocationActivity extends AppCompatActivity implements
 
         if(!isServiceRunning(LocationUpdatesService.class)){
             startLocationService();
+            finish();
         }
     }
 
@@ -89,6 +90,7 @@ public class LocationActivity extends AppCompatActivity implements
                 } else {
 //                    mService.requestLocationUpdates();
                     startLocationService();
+                    finish();
 
                 }
             }
@@ -107,9 +109,7 @@ public class LocationActivity extends AppCompatActivity implements
     }
 
     void startLocationService() {
-        Intent intent = new Intent(this, LocationUpdatesService.class);
-        intent.putExtra(LocationUpdatesService.COMMAND_KEY, LocationUpdatesService.ACTION_START);
-        startService(intent);
+        Utils.startLocationService(this);
     }
 
     void stopLocationService() {
@@ -195,6 +195,7 @@ public class LocationActivity extends AppCompatActivity implements
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission was granted.
                startLocationService();
+               finish();
             } else {
                 // Permission denied.
                 setButtonsState(false);

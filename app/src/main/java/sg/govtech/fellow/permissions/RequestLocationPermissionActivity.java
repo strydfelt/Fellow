@@ -15,7 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 import sg.govtech.fellow.R;
-import sg.govtech.fellow.location.LocationUpdatesService;
+import sg.govtech.fellow.location.Utils;
 
 public class RequestLocationPermissionActivity extends AppCompatActivity {
 
@@ -53,17 +53,10 @@ public class RequestLocationPermissionActivity extends AppCompatActivity {
                     .show();
         } else {
             //start the service
-            startLocationService();
+            Utils.startLocationService(this);
+            finish();
         }
     }
-
-    void startLocationService() {
-        Intent intent = new Intent(this, LocationUpdatesService.class);
-        intent.putExtra(LocationUpdatesService.COMMAND_KEY, LocationUpdatesService.ACTION_START);
-        startService(intent);
-        finish();
-    }
-
 
 //    private void checkLocationSetting(){
 //        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
@@ -133,7 +126,8 @@ public class RequestLocationPermissionActivity extends AppCompatActivity {
             if (LocationManager.MODE_CHANGED_ACTION.equals(intent.getAction())){
                 boolean settingOn = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
                 if(settingOn){
-                    RequestLocationPermissionActivity.this.startLocationService();
+                    Utils.startLocationService(RequestLocationPermissionActivity.this);
+                    RequestLocationPermissionActivity.this.finish();
                 }
             }
         }

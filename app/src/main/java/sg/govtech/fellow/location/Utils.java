@@ -1,6 +1,7 @@
 package sg.govtech.fellow.location;
 
 import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 import android.preference.PreferenceManager;
 
@@ -10,7 +11,7 @@ import java.util.Date;
 import sg.govtech.fellow.R;
 
 //https://github.com/android/location-samples/blob/432d3b72b8c058f220416958b444274ddd186abd/LocationUpdatesForegroundService/app/src/main/java/com/google/android/gms/location/sample/locationupdatesforegroundservice/Utils.java
-class Utils {
+public class Utils {
 
     static final String KEY_REQUESTING_LOCATION_UPDATES = "requesting_locaction_updates";
 
@@ -48,4 +49,12 @@ class Utils {
         return context.getString(R.string.location_updated,
                 DateFormat.getDateTimeInstance().format(new Date()));
     }
+
+    public static void startLocationService(Context context) {
+        Intent intent = new Intent(context, LocationUpdatesService.class);
+        intent.putExtra(LocationUpdatesService.COMMAND_KEY, LocationUpdatesService.ACTION_START);
+        context.startService(intent);
+//        LocationUpdatesService.enqueueWork(context, intent);
+    }
+
 }

@@ -46,7 +46,12 @@
             android:launchMode="singleTask"
             android:theme="@style/Theme.AppCompat.Transparent.NoActionBar"/>
 
-        <service android:name=".location.LocationUpdatesService"></service>
+        <service android:name=".location.LocationUpdatesService" />
+
+        <activity android:name=".boot.ServiceBootLauncher"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.AppCompat.Transparent.NoActionBar"/>
+
 
     </application>
 

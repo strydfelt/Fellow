@@ -44,7 +44,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 import sg.govtech.fellow.location.LocationActivity;
-import sg.govtech.fellow.location.LocationUpdatesService;
+import sg.govtech.fellow.location.Utils;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -88,7 +88,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         findViewById(R.id.start_service).setOnClickListener((View v) -> {
-            startLocationService();
+            Utils.startLocationService(MainActivity.this);
+            finish();
         });
 
 
@@ -254,11 +255,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void startLocationService() {
-        Intent intent = new Intent(this, LocationUpdatesService.class);
-        intent.putExtra(LocationUpdatesService.COMMAND_KEY, LocationUpdatesService.ACTION_START);
-        startService(intent);
-    }
 
     public void startLocationActivity() {
         Intent intent = new Intent(this, LocationActivity.class);
