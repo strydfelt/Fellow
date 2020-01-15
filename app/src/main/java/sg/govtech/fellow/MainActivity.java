@@ -7,13 +7,19 @@ import android.content.Intent;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.telephony.CellIdentityCdma;
 import android.telephony.CellIdentityGsm;
 import android.telephony.CellIdentityLte;
+import android.telephony.CellIdentityWcdma;
 import android.telephony.CellInfo;
+import android.telephony.CellInfoCdma;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
+import android.telephony.CellInfoWcdma;
+import android.telephony.CellSignalStrengthCdma;
 import android.telephony.CellSignalStrengthGsm;
 import android.telephony.CellSignalStrengthLte;
+import android.telephony.CellSignalStrengthWcdma;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -77,23 +83,28 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
-       findViewById(R.id.start_other).setOnClickListener((View v) -> {
+        findViewById(R.id.start_other).setOnClickListener((View v) -> {
             startLocationActivity();
         });
 
-        findViewById(R.id.start_service).setOnClickListener( (View v) -> {
+        findViewById(R.id.start_service).setOnClickListener((View v) -> {
             startLocationService();
         });
 
-        test();
+
+        findViewById(R.id.test_cell).setOnClickListener((View v) -> {
+            test();
+        });
+
+
     }
 
     @AfterPermissionGranted(RC_LOCATION)
-    void test(){
+    void test() {
 
         String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION};
         if (EasyPermissions.hasPermissions(this, perms)) {
-           requestLocationSettingAndExecute();
+            requestLocationSettingAndExecute();
 
         } else {
             // Do not have permissions, request them now
@@ -103,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public JSONArray getCellInfo(Context ctx){
+    public JSONArray getCellInfo(Context ctx) {
         TelephonyManager tel = (TelephonyManager) ctx.getSystemService(Context.TELEPHONY_SERVICE);
 
         JSONArray cellList = new JSONArray();
@@ -133,28 +144,44 @@ public class MainActivity extends AppCompatActivity {
         } else {
             List<CellInfo> infos = tel.getAllCellInfo();
 
-            if(infos == null){
+            if (infos == null) {
                 infos = new ArrayList<>();
             }
 
-            for (int i = 0; i<infos.size(); ++i) {
+            for (int i = 0; i < infos.size(); ++i) {
                 try {
                     JSONObject cellObj = new JSONObject();
                     CellInfo info = infos.get(i);
-                    if (info instanceof CellInfoGsm){
+                    //GSM
+                    if (info instanceof CellInfoGsm) {
                         CellSignalStrengthGsm gsm = ((CellInfoGsm) info).getCellSignalStrength();
                         CellIdentityGsm identityGsm = ((CellInfoGsm) info).getCellIdentity();
                         cellObj.put("cellId", identityGsm.getCid());
                         cellObj.put("lac", identityGsm.getLac());
                         cellObj.put("dbm", gsm.getDbm());
                         cellList.put(cellObj);
-                    } else if (info instanceof CellInfoLte) {
+
+                    }
+                    //LTE
+                    else if (info instanceof CellInfoLte) {
                         CellSignalStrengthLte lte = ((CellInfoLte) info).getCellSignalStrength();
                         CellIdentityLte identityLte = ((CellInfoLte) info).getCellIdentity();
                         cellObj.put("cellId", identityLte.getCi());
                         cellObj.put("tac", identityLte.getTac());
                         cellObj.put("dbm", lte.getDbm());
                         cellList.put(cellObj);
+                    }
+                    //CDMA
+                    else if (info instanceof CellInfoCdma) {
+                        CellInfoCdma cdma = ((CellInfoCdma) info);
+                        CellIdentityCdma cdmaId = cdma.getCellIdentity();
+                        CellSignalStrengthCdma cdmaStrength = cdma.getCellSignalStrength();
+                    }
+                    //UMTS?
+                    else if (info instanceof CellInfoWcdma) {
+                        CellInfoWcdma wcdma = ((CellInfoWcdma) info);
+                        CellIdentityWcdma wcdmaId = wcdma.getCellIdentity();
+                        CellSignalStrengthWcdma wcdmaStrength = wcdma.getCellSignalStrength();
                     }
 
                 } catch (Exception ex) {
@@ -166,11 +193,11 @@ public class MainActivity extends AppCompatActivity {
         return cellList;
     }
 
-    private JSONArray getNetworksJSON(){
+    private JSONArray getNetworksJSON() {
         TelephonyManager tel = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         List<CellInfo> cells = tel.getAllCellInfo();
 
-        if(cells == null){
+        if (cells == null) {
             cells = new ArrayList<>();
         }
         Log.d(TAG, "num cells: " + cells.size());
@@ -200,10 +227,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-    private void requestLocationSettingAndExecute(){
+    private void requestLocationSettingAndExecute() {
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if( !locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ) {
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.gps_not_found_title)  // GPS not found
                     .setMessage(R.string.gps_not_found_message) // Want to enable?
@@ -215,12 +241,11 @@ public class MainActivity extends AppCompatActivity {
                     .setCancelable(false)
                     .setNegativeButton(R.string.no_thanks, null)
                     .show();
-        }
-        else{
+        } else {
             JSONArray cellsV1 = getCellInfo(this);
             try {
                 Log.d(TAG, cellsV1.toString(2));
-                ((TextView)findViewById(R.id.output)).setText(cellsV1.toString(2));
+                ((TextView) findViewById(R.id.output)).setText(cellsV1.toString(2));
             } catch (Exception e) {
                 e.printStackTrace();
             }

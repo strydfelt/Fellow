@@ -27,13 +27,16 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import pub.devrel.easypermissions.EasyPermissions;
 import sg.govtech.fellow.MainActivity;
 import sg.govtech.fellow.R;
+import sg.govtech.fellow.log.SDLog;
+import sg.govtech.fellow.permissions.RequestFileWritePermission;
 import sg.govtech.fellow.permissions.RequestLocationPermissionActivity;
 
 
@@ -44,7 +47,7 @@ public class LocationUpdatesService extends Service {
     private LocationCallback mLocationCallback;
     private LocationRequest mLocationRequest;
 
-    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 3*60*1000;
+    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5 * 1000;//3*60*1000;
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
 
@@ -57,8 +60,8 @@ public class LocationUpdatesService extends Service {
     private static final int NOTIFICATION_ID = 771579;
     private static final String CHANNEL_ID = "Location Updates";
 
-    private static final String PACKAGE_NAME =
-            "sg.gov.fellow.locationupdater";
+    private static final String PACKAGE_NAME = "sg.gov.fellow.locationupdater";
+
     static final String ACTION_BROADCAST = PACKAGE_NAME + ".broadcast";
 
     static final String EXTRA_LOCATION = PACKAGE_NAME + ".location";
@@ -73,12 +76,15 @@ public class LocationUpdatesService extends Service {
     public static final String ACTION_START = PACKAGE_NAME + "_START";
     public static final String ACTION_STOP = PACKAGE_NAME + "_STOP";
 
+    public static final String CHANNEL_LOCATION_SERVICE = "Fellow Foreground Service";
+
     public LocationUpdatesService() {
     }
 
     @Override
     public void onCreate() {
         Log.d(TAG, "Creating service");
+        SDLog.setAppName("Fellow");
         setupTracking();
     }
 
@@ -104,7 +110,7 @@ public class LocationUpdatesService extends Service {
 
         // Android O requires a Notification Channel.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = getString(R.string.app_name);
+            CharSequence name = CHANNEL_LOCATION_SERVICE;
             // Create the channel for the notification
             NotificationChannel mChannel =
                     new NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT);
@@ -117,14 +123,25 @@ public class LocationUpdatesService extends Service {
         }
     }
 
-    private boolean hasPermissions(){
+    private boolean hasLocationPermissions(){
         String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION};
         if (EasyPermissions.hasPermissions(this, perms)) {
             Utils.setRequestingLocationUpdates(this, true);
             return true;
         } else {
             // Do not have permissions, request them now
-            Log.w(TAG, "Todo: request permission from service");
+            Log.w(TAG, "Todo: request location permission from service");
+            return false;
+        }
+    }
+
+    private boolean hasWritePermissions(){
+        String[] perms = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
+        if (EasyPermissions.hasPermissions(this, perms)) {
+            return true;
+        } else {
+            // Do not have permissions, request them now
+            Log.w(TAG, "Todo: request write permission from service");
             return false;
         }
     }
@@ -146,8 +163,14 @@ public class LocationUpdatesService extends Service {
         return gps_enabled;
     }
 
-    private void acquirePermsAndSets(){
+    private void acquireLocationPermissionAndSetting(){
         Intent intent = new Intent(this, RequestLocationPermissionActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+    }
+
+    private void acquireWritePermission(){
+        Intent intent = new Intent(this, RequestFileWritePermission.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
     }
@@ -157,21 +180,37 @@ public class LocationUpdatesService extends Service {
         Log.i(TAG, "Service started");
 
         //check for permissions?
-        if(!hasPermissions()){
-            Log.i(TAG, "no permission");
+        if(!hasLocationPermissions()){
+            Log.i(TAG, "no location permission");
 
             //start location permission activity
-            acquirePermsAndSets();
+            acquireLocationPermissionAndSetting();
             stopSelf();
             return START_NOT_STICKY;
         }
 
+
+        Log.d(TAG, "has location perm");
+
         //check for location setting
         if(!isLocationSettingOn()){
-            Log.i(TAG, "no setting");
+            Log.i(TAG, "no location setting");
 
             //start location setting activity
-            acquirePermsAndSets();
+            acquireLocationPermissionAndSetting();
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+
+        Log.d(TAG, "has location setting");
+
+
+        //check for write permissions
+        if(!hasWritePermissions()){
+            Log.i(TAG, "no write permission");
+
+            //start location permission activity
+            acquireWritePermission();
             stopSelf();
             return START_NOT_STICKY;
         }
@@ -215,6 +254,7 @@ public class LocationUpdatesService extends Service {
             removeLocationUpdates();
             stopSelf();
         }
+
         // Tells the system to not try to recreate the service after it has been killed.
         return START_STICKY;
     }
@@ -370,17 +410,27 @@ public class LocationUpdatesService extends Service {
     private void onNewLocation(Location location) {
         Log.i(TAG, "New location: " + location);
 
+
         mLocation = location;
 
         // Notify anyone listening for broadcasts about the new location.
-        Intent intent = new Intent(ACTION_BROADCAST);
-        intent.putExtra(EXTRA_LOCATION, location);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+//        Intent intent = new Intent(ACTION_BROADCAST);
+//        intent.putExtra(EXTRA_LOCATION, location);
+//        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
 
         // Update notification content if running as a foreground service.
         if (serviceIsRunningInForeground(this)) {
             mNotificationManager.notify(NOTIFICATION_ID, getNotification());
         }
+
+        GsonBuilder builder = new GsonBuilder();
+//        builder.setPrettyPrinting();
+        Gson gson = builder.create();
+
+        LocationModel model = new LocationModel(location);
+
+        Log.d(TAG, gson.toJson(model));
+        SDLog.d(gson.toJson(model));
     }
 
     /**

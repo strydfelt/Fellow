@@ -33,13 +33,22 @@
         app:layout_constraintTop_toBottomOf="@id/start_other"
         />
 
+
+    <Button
+        android:id="@+id/test_cell"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="test cell tower"
+        app:layout_constraintTop_toBottomOf="@id/start_service"
+        />
+
     <TextView
         android:id="@+id/output"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Pending"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/start_service"
+        app:layout_constraintTop_toBottomOf="@id/test_cell"
         />
 
 

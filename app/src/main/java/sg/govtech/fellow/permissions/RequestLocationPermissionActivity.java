@@ -61,6 +61,7 @@ public class RequestLocationPermissionActivity extends AppCompatActivity {
         Intent intent = new Intent(this, LocationUpdatesService.class);
         intent.putExtra(LocationUpdatesService.COMMAND_KEY, LocationUpdatesService.ACTION_START);
         startService(intent);
+        finish();
     }
 
 

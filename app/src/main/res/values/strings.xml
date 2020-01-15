@@ -23,6 +23,8 @@
 
 
     <string name="permission_location_rationale">Fellow needs your location to observe your permission</string>
+    <string name="permission_write_rationale">Fellow needs save files for logs</string>
+
 
     <string name="gps_not_found_title">Location Setting is Off</string>
     <string name="gps_not_found_message">This device\'s location settings are off. Please turn it on or the app will not function. Go to Settings to turn it on?</string>

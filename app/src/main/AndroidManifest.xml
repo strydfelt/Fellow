@@ -7,6 +7,8 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -35,7 +37,14 @@
         </receiver>
 
         <activity android:name=".location.LocationActivity"/>
-        <activity android:name=".permissions.RequestLocationPermissionActivity" android:theme="@style/Theme.AppCompat.Transparent.NoActionBar"/>
+
+        <activity android:name=".permissions.RequestLocationPermissionActivity"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.AppCompat.Transparent.NoActionBar"/>
+
+        <activity android:name=".permissions.RequestFileWritePermission"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.AppCompat.Transparent.NoActionBar"/>
 
         <service android:name=".location.LocationUpdatesService"></service>
 
