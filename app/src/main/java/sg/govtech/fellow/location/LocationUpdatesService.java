@@ -9,9 +9,11 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
@@ -47,7 +49,7 @@ public class LocationUpdatesService extends Service {
     private LocationCallback mLocationCallback;
     private LocationRequest mLocationRequest;
 
-    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5 * 1000;//3*60*1000;
+    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 3*60*1000;
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
 
@@ -315,6 +317,15 @@ public class LocationUpdatesService extends Service {
         mServiceHandler.removeCallbacksAndMessages(null);
     }
 
+
+    @Override
+    public boolean stopService(Intent name) {
+        // TODO Auto-generated method stub
+        removeLocationUpdates();
+        return super.stopService(name);
+
+    }
+
     /**
      * Makes a request for location updates. Note that in this sample we merely log the
      * {@link SecurityException}.
@@ -408,8 +419,7 @@ public class LocationUpdatesService extends Service {
     }
 
     private void onNewLocation(Location location) {
-        Log.i(TAG, "New location: " + location);
-
+//        Log.i(TAG, "New location: " + location);
 
         mLocation = location;
 
@@ -427,10 +437,55 @@ public class LocationUpdatesService extends Service {
 //        builder.setPrettyPrinting();
         Gson gson = builder.create();
 
-        LocationModel model = new LocationModel(location);
+        LocationModel locModel = new LocationModel(location);
+        BatteryStats batt = getBatteryStats();
+
+        DataReportingModel model = new DataReportingModel(locModel, batt);
 
         Log.d(TAG, gson.toJson(model));
         SDLog.d(gson.toJson(model));
+    }
+
+
+    private BatteryStats getBatteryStats(){
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = this.registerReceiver(null, ifilter);
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        BatteryStats batt = new BatteryStats(level, scale, getChargeCounterLeft(this), getBatteryCapacity(this), getTotalBatteryCapacity(this));
+        return batt;
+    }
+
+    private int getChargeCounterLeft(Context context){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            BatteryManager mBatteryManager = (BatteryManager) context.getSystemService(Context.BATTERY_SERVICE);
+            Integer chargeCounter = mBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
+            return chargeCounter;
+        }
+        return 0;
+    }
+
+    private int getBatteryCapacity(Context context){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            BatteryManager mBatteryManager = (BatteryManager) context.getSystemService(Context.BATTERY_SERVICE);
+            Integer capacity = mBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+            return capacity;
+        }
+        return 0;
+    }
+
+    private long getTotalBatteryCapacity(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            BatteryManager mBatteryManager = (BatteryManager) context.getSystemService(Context.BATTERY_SERVICE);
+            Integer chargeCounter = mBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
+            Integer capacity = mBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+
+            if(chargeCounter == Integer.MIN_VALUE || capacity == Integer.MIN_VALUE)
+                return 0;
+
+            return (chargeCounter/capacity) *100;
+        }
+        return 0;
     }
 
     /**

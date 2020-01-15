@@ -33,13 +33,21 @@
         app:layout_constraintTop_toBottomOf="@id/start_other"
         />
 
+    <Button
+        android:id="@+id/stop_service"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="stop service"
+        app:layout_constraintTop_toBottomOf="@id/start_service"
+        />
+
 
     <Button
         android:id="@+id/test_cell"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="test cell tower"
-        app:layout_constraintTop_toBottomOf="@id/start_service"
+        app:layout_constraintTop_toBottomOf="@id/stop_service"
         />
 
     <TextView

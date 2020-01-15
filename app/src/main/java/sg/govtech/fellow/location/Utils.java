@@ -54,7 +54,13 @@ public class Utils {
         Intent intent = new Intent(context, LocationUpdatesService.class);
         intent.putExtra(LocationUpdatesService.COMMAND_KEY, LocationUpdatesService.ACTION_START);
         context.startService(intent);
-//        LocationUpdatesService.enqueueWork(context, intent);
     }
+
+    public static void stopLocationService(Context context) {
+        Intent intent = new Intent(context, LocationUpdatesService.class);
+        intent.putExtra(LocationUpdatesService.COMMAND_KEY, LocationUpdatesService.ACTION_STOP);
+        context.stopService(intent);
+    }
+
 
 }

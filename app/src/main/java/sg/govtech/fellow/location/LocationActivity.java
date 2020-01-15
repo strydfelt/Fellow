@@ -99,7 +99,7 @@ public class LocationActivity extends AppCompatActivity implements
         mRemoveLocationUpdatesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                stopLocationService();
+                Utils.stopLocationService(LocationActivity.this);
             }
         });
 
@@ -110,12 +110,6 @@ public class LocationActivity extends AppCompatActivity implements
 
     void startLocationService() {
         Utils.startLocationService(this);
-    }
-
-    void stopLocationService() {
-        Intent intent = new Intent(this, LocationUpdatesService.class);
-        intent.putExtra(LocationUpdatesService.COMMAND_KEY, LocationUpdatesService.ACTION_STOP);
-        stopService(intent);
     }
 
     @Override

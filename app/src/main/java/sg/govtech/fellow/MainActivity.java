@@ -92,10 +92,15 @@ public class MainActivity extends AppCompatActivity {
             finish();
         });
 
+        findViewById(R.id.stop_service).setOnClickListener((View v) -> {
+            Utils.stopLocationService(MainActivity.this);
+        });
+
 
         findViewById(R.id.test_cell).setOnClickListener((View v) -> {
             test();
         });
+
 
 
     }
