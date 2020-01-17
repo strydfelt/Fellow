@@ -9,6 +9,7 @@ import java.text.DateFormat;
 import java.util.Date;
 
 import sg.govtech.fellow.R;
+import sg.govtech.fellow.reporter.ReporterService;
 
 //https://github.com/android/location-samples/blob/432d3b72b8c058f220416958b444274ddd186abd/LocationUpdatesForegroundService/app/src/main/java/com/google/android/gms/location/sample/locationupdatesforegroundservice/Utils.java
 public class Utils {
@@ -60,6 +61,12 @@ public class Utils {
         Intent intent = new Intent(context, LocationUpdatesService.class);
         intent.putExtra(LocationUpdatesService.COMMAND_KEY, LocationUpdatesService.ACTION_STOP);
         context.stopService(intent);
+    }
+
+    public static void startScheduledService(Context context){
+        Intent intent = new Intent(context, LocationUpdatesService.class);
+        intent.putExtra(ReporterService.COMMAND_KEY, ReporterService.ACTION_PERFORM_TASK);
+        context.startService(intent);
     }
 
 

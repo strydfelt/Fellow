@@ -56,10 +56,10 @@ public class LocationActivity extends AppCompatActivity implements
             }
         }
 
-        if(!isServiceRunning(LocationUpdatesService.class)){
+//        if(!isServiceRunning(LocationUpdatesService.class)){
             startLocationService();
             finish();
-        }
+//        }
     }
 
 

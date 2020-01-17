@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
 
         //from Android M up must use getAllCellInfo
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-
+            Log.d(TAG, "using L cell detection");
             List<NeighboringCellInfo> neighCells = tel.getNeighboringCellInfo();
             for (int i = 0; i < neighCells.size(); i++) {
                 try {
@@ -148,6 +148,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
         } else {
+            Log.d(TAG, "using M cell detection");
+
             List<CellInfo> infos = tel.getAllCellInfo();
 
             if (infos == null) {
@@ -206,7 +208,6 @@ public class MainActivity extends AppCompatActivity {
         if (cells == null) {
             cells = new ArrayList<>();
         }
-        Log.d(TAG, "num cells: " + cells.size());
 
         GsonBuilder builder = new GsonBuilder();
         builder.setPrettyPrinting();
@@ -218,15 +219,9 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, cellInfo.toString());
             String json = gson.toJson(cellInfo, CellInfo.class);
             Log.d(TAG, json);
-
             networkArray.put(json);
         }
 
-//        try {
-//            Log.d(TAG, networkArray.toString(2));
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
 
         return networkArray;
 
@@ -250,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             JSONArray cellsV1 = getCellInfo(this);
             try {
-                Log.d(TAG, cellsV1.toString(2));
+                Log.d(TAG, "cellsV1 " + cellsV1.toString(2));
                 ((TextView) findViewById(R.id.output)).setText(cellsV1.toString(2));
             } catch (Exception e) {
                 e.printStackTrace();

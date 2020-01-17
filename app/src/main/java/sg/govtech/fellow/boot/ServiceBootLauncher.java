@@ -6,7 +6,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.JobIntentService;
-import sg.govtech.fellow.location.LocationActivity;
 import sg.govtech.fellow.log.SDLog;
 
 public class ServiceBootLauncher extends JobIntentService {
@@ -32,9 +31,8 @@ public class ServiceBootLauncher extends JobIntentService {
 
         Log.d("ServiceBootLauncher", "Starting activity");
         SDLog.d("Starting service");
-//        Utils.startLocationService(this);
 
-        Intent actIntent = new Intent(this, LocationActivity.class);
+        Intent actIntent = new Intent(this, StartLocationServiceActivity.class);
         actIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(actIntent);
 

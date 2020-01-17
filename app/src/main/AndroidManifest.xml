@@ -48,12 +48,13 @@
             android:launchMode="singleTask"
             android:theme="@style/Theme.AppCompat.Transparent.NoActionBar"/>
 
-        <activity android:name=".boot.StubActivity"
+        <activity android:name=".boot.StartLocationServiceActivity"
             android:launchMode="singleInstance"
             android:theme="@style/Theme.AppCompat.Transparent.NoActionBar"/>
 
         <service android:name=".location.LocationUpdatesService" />
         <service android:name=".scheduler.ScheduledService"/>
+        <service android:name=".reporter.ReporterService"/>
 
         <service android:name=".boot.ServiceBootLauncher"
             android:permission="android.permission.BIND_JOB_SERVICE"

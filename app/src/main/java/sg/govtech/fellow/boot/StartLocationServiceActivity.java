@@ -8,15 +8,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import sg.govtech.fellow.location.Utils;
 import sg.govtech.fellow.log.SDLog;
 
-public class StubActivity extends AppCompatActivity {
+public class StartLocationServiceActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SDLog.setAppName("Fellow");
 
-        Log.d("StubActivity", "Starting service");
+        Log.d("SLSA", "Starting service");
         SDLog.d("Starting service");
         Utils.startLocationService(this);
+        finish();
     }
 }

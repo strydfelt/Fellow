@@ -1,4 +1,4 @@
-package sg.govtech.fellow.location;
+package sg.govtech.fellow.data;
 
 public class DataReportingModel {
     LocationModel location;
