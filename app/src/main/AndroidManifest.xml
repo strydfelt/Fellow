@@ -29,10 +29,10 @@
         </activity>
 
         <receiver
-            android:name=".boot.StartOnBootReceiver"
-            android:label="StartMyServiceAtBootReceiver">
+            android:name=".boot.StartOnBootReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
 
@@ -46,11 +46,16 @@
             android:launchMode="singleTask"
             android:theme="@style/Theme.AppCompat.Transparent.NoActionBar"/>
 
-        <service android:name=".location.LocationUpdatesService" />
-
-        <activity android:name=".boot.ServiceBootLauncher"
-            android:launchMode="singleTask"
+        <activity android:name=".boot.StubActivity"
+            android:launchMode="singleInstance"
             android:theme="@style/Theme.AppCompat.Transparent.NoActionBar"/>
+
+        <service android:name=".location.LocationUpdatesService" />
+        <service android:name=".scheduler.ScheduledService"/>
+
+        <service android:name=".boot.ServiceBootLauncher"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            />
 
 
     </application>

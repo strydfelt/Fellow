@@ -222,11 +222,11 @@ public class MainActivity extends AppCompatActivity {
             networkArray.put(json);
         }
 
-        try {
-            Log.d(TAG, networkArray.toString(2));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            Log.d(TAG, networkArray.toString(2));
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
 
         return networkArray;
 

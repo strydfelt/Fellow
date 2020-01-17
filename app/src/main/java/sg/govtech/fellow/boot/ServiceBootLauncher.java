@@ -1,15 +1,42 @@
 package sg.govtech.fellow.boot;
 
-import android.os.Bundle;
+import android.content.Context;
+import android.content.Intent;
+import android.util.Log;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import sg.govtech.fellow.location.Utils;
+import androidx.annotation.NonNull;
+import androidx.core.app.JobIntentService;
+import sg.govtech.fellow.location.LocationActivity;
+import sg.govtech.fellow.log.SDLog;
 
-public class ServiceBootLauncher extends AppCompatActivity {
+public class ServiceBootLauncher extends JobIntentService {
+//    @Override
+//    protected void onCreate(@Nullable Bundle savedInstanceState) {
+//        super.onCreate(savedInstanceState);
+//        Utils.startLocationService(this);
+//    }
+
+    public static final int JOB_ID = 0x01;
+
+    public static void enqueueWork(Context context, Intent work) {
+        SDLog.setAppName("Fellow");
+
+        Log.d("ServiceBootLauncher", "enqueued work");
+        SDLog.d("enqueued work");
+        enqueueWork(context, ServiceBootLauncher.class, JOB_ID, work);
+    }
+
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Utils.startLocationService(this);
+    protected void onHandleWork(@NonNull Intent intent) {
+        SDLog.setAppName("Fellow");
+
+        Log.d("ServiceBootLauncher", "Starting activity");
+        SDLog.d("Starting service");
+//        Utils.startLocationService(this);
+
+        Intent actIntent = new Intent(this, LocationActivity.class);
+        actIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(actIntent);
+
     }
 }

@@ -1,4 +1,4 @@
-package sg.govtech.fellow.location;
+package sg.govtech.fellow.scheduler;
 
 import android.Manifest;
 import android.app.ActivityManager;
@@ -37,13 +37,18 @@ import androidx.core.app.NotificationCompat;
 import pub.devrel.easypermissions.EasyPermissions;
 import sg.govtech.fellow.MainActivity;
 import sg.govtech.fellow.R;
+import sg.govtech.fellow.location.BatteryStats;
+import sg.govtech.fellow.location.DataReportingModel;
+import sg.govtech.fellow.location.LocationModel;
+import sg.govtech.fellow.location.Utils;
 import sg.govtech.fellow.log.SDLog;
 import sg.govtech.fellow.permissions.RequestFileWritePermission;
 import sg.govtech.fellow.permissions.RequestLocationPermissionActivity;
 
+public class ScheduledService extends Service {
 
-//taken form https://github.com/android/location-samples/blob/432d3b72b8c058f220416958b444274ddd186abd/LocationUpdatesForegroundService/app/src/main/java/com/google/android/gms/location/sample/locationupdatesforegroundservice/LocationUpdatesService.java
-public class LocationUpdatesService extends Service {
+    private static final String TAG = ScheduledService.class.getSimpleName();
+
 
     private FusedLocationProviderClient mFusedLocationClient;
     private LocationCallback mLocationCallback;
@@ -62,7 +67,6 @@ public class LocationUpdatesService extends Service {
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
 
     private Handler mServiceHandler;
-    private static final String TAG = LocationUpdatesService.class.getSimpleName();
 
     private NotificationManager mNotificationManager;
     private Location mLocation;
@@ -80,7 +84,7 @@ public class LocationUpdatesService extends Service {
 
     private boolean mChangingConfiguration = false;
 
-    private final IBinder mBinder = new LocalBinder();
+    private final IBinder mBinder = new ScheduledService.LocalBinder();
 
     public static final String COMMAND_KEY = PACKAGE_NAME + "_CMD";
     public static final String ACTION_START = PACKAGE_NAME + "_START";
@@ -88,16 +92,17 @@ public class LocationUpdatesService extends Service {
 
     public static final String CHANNEL_LOCATION_SERVICE = "Fellow Foreground Service";
 
-    public LocationUpdatesService() {
+
+    public ScheduledService() {
+        super();
     }
 
     @Override
     public void onCreate() {
-        Log.d(TAG, "Creating service - LocationUpdatesService");
+        Log.d(TAG, "Creating service - ScheduledService");
         SDLog.setAppName("Fellow");
         setupTracking();
     }
-
     private void setupTracking(){
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -334,22 +339,7 @@ public class LocationUpdatesService extends Service {
 
     }
 
-    /**
-     * Makes a request for location updates. Note that in this sample we merely log the
-     * {@link SecurityException}.
-     */
-    public void requestLocationUpdates() {
-        Log.i(TAG, "Requesting location updates");
-        Utils.setRequestingLocationUpdates(this, true);
-        startService(new Intent(getApplicationContext(), LocationUpdatesService.class));
-        try {
-            mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-                    mLocationCallback, Looper.myLooper());
-        } catch (SecurityException unlikely) {
-            Utils.setRequestingLocationUpdates(this, false);
-            Log.e(TAG, "Lost location permission. Could not request updates. " + unlikely);
-        }
-    }
+
 
     /**
      * Removes location updates. Note that in this sample we merely log the
@@ -371,7 +361,7 @@ public class LocationUpdatesService extends Service {
      * Returns the {@link NotificationCompat} used as part of the foreground service.
      */
     private Notification getNotification() {
-        Intent intent = new Intent(this, LocationUpdatesService.class);
+        Intent intent = new Intent(this, ScheduledService.class);
 
         CharSequence text = Utils.getLocationText(mLocation);
 
@@ -457,7 +447,6 @@ public class LocationUpdatesService extends Service {
         }
 
 //        GsonBuilder builder = new GsonBuilder();
-////        builder.setPrettyPrinting();
 //        Gson gson = builder.create();
 //
 //        LocationModel locModel = new LocationModel(location);
@@ -470,7 +459,6 @@ public class LocationUpdatesService extends Service {
 
         logCurrentState();
     }
-
 
     private BatteryStats getBatteryStats(){
         IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
@@ -528,8 +516,8 @@ public class LocationUpdatesService extends Service {
      * clients, we don't need to deal with IPC.
      */
     public class LocalBinder extends Binder {
-        LocationUpdatesService getService() {
-            return LocationUpdatesService.this;
+        ScheduledService getService() {
+            return ScheduledService.this;
         }
     }
 
