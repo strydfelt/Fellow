@@ -53,11 +53,11 @@ public class Utils {
     }
 
     public static void startLocationService(Context context) {
-//        Intent intent = new Intent(context, LocationUpdatesService.class);
-//        intent.putExtra(LocationUpdatesService.COMMAND_KEY, LocationUpdatesService.ACTION_START);
-//        context.startService(intent);
+        Intent intent = new Intent(context, LocationUpdatesService.class);
+        intent.putExtra(LocationUpdatesService.COMMAND_KEY, LocationUpdatesService.ACTION_START);
+        context.startService(intent);
 
-        startScheduledService(context);
+//        startScheduledService(context);
 
     }
 
@@ -68,19 +68,19 @@ public class Utils {
     }
 
     public static void startScheduledService(Context context){
-        Intent intent = new Intent(context, ReporterService.class);
-        intent.putExtra(ReporterService.COMMAND_KEY, ReporterService.ACTION_PERFORM_TASK);
+        Intent intent = new Intent(context, LocationUpdatesService.class);
+        intent.putExtra(ReporterService.COMMAND_KEY, LocationUpdatesService.ACTION_RECORD);
         context.startService(intent);
     }
 
     public static void scheduleNextTask(Context context){
-        Intent nextIntent = new Intent(context, ReporterService.class);
-        nextIntent.putExtra(ReporterService.COMMAND_KEY, ReporterService.ACTION_PERFORM_TASK);
+        Intent nextIntent = new Intent(context, LocationUpdatesService.class);
+        nextIntent.putExtra(ReporterService.COMMAND_KEY, LocationUpdatesService.ACTION_RECORD);
         Scheduler.scheduleServiceIntent(context, nextIntent, 5000);
     }
 
     public static void cancelNextTask(Context context){
-        Intent nextIntent = new Intent(context, ReporterService.class);
+        Intent nextIntent = new Intent(context, LocationUpdatesService.class);
         Scheduler.cancelServiceIntent(context, nextIntent);
     }
 

@@ -21,9 +21,12 @@ import android.util.Log;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import androidx.annotation.NonNull;
 import pub.devrel.easypermissions.EasyPermissions;
 import sg.govtech.fellow.data.BatteryStats;
 import sg.govtech.fellow.data.DataReportingModel;
@@ -61,7 +64,7 @@ public class ReporterService extends Service {
     private final IBinder mBinder = new ReporterService.LocalBinder();
 
     public static final String COMMAND_KEY = PACKAGE_NAME + "_CMD";
-    public static final String ACTION_PERFORM_TASK = PACKAGE_NAME + "_PERFORM_TASK";
+    public static final String ACTION_RECORD = PACKAGE_NAME + "_PERFORM_TASK";
     public static final String ACTION_STOP = PACKAGE_NAME + "_STOP";
 
     public static final String CHANNEL_LOCATION_SERVICE = "Fellow Foreground Scheduled Service";
@@ -77,10 +80,9 @@ public class ReporterService extends Service {
         SDLog.setAppName("Fellow");
         setupTracking();
     }
-    private void setupTracking(){
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        getLastLocation();
+    private void setupTracking() {
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         HandlerThread handlerThread = new HandlerThread(TAG);
         handlerThread.start();
@@ -96,14 +98,14 @@ public class ReporterService extends Service {
                     new NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT);
             mChannel.enableLights(false);
             mChannel.enableVibration(true);
-            mChannel.setVibrationPattern(new long[]{ 0L });
+            mChannel.setVibrationPattern(new long[]{0L});
 
             // Set the Notification Channel for the Notification Manager.
             mNotificationManager.createNotificationChannel(mChannel);
         }
     }
 
-    private boolean hasLocationPermissions(){
+    private boolean hasLocationPermissions() {
         String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION};
         if (EasyPermissions.hasPermissions(this, perms)) {
             Utils.setRequestingLocationUpdates(this, true);
@@ -115,7 +117,7 @@ public class ReporterService extends Service {
         }
     }
 
-    private boolean hasWritePermissions(){
+    private boolean hasWritePermissions() {
         String[] perms = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
         if (EasyPermissions.hasPermissions(this, perms)) {
             return true;
@@ -126,29 +128,31 @@ public class ReporterService extends Service {
         }
     }
 
-    private boolean isLocationSettingOn(){
-        LocationManager lm = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
+    private boolean isLocationSettingOn() {
+        LocationManager lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         boolean gps_enabled = false;
         boolean network_enabled = false;
 
         try {
             gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        } catch(Exception ex) {}
+        } catch (Exception ex) {
+        }
 
         try {
             network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-        } catch(Exception ex) {}
+        } catch (Exception ex) {
+        }
 
         return gps_enabled;
     }
 
-    private void acquireLocationPermissionAndSetting(){
+    private void acquireLocationPermissionAndSetting() {
         Intent intent = new Intent(this, RequestLocationPermissionActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
     }
 
-    private void acquireWritePermission(){
+    private void acquireWritePermission() {
         Intent intent = new Intent(this, RequestFileWritePermission.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
@@ -159,7 +163,7 @@ public class ReporterService extends Service {
         Log.i(TAG, "Service started");
 
         //check for permissions?
-        if(!hasLocationPermissions()){
+        if (!hasLocationPermissions()) {
             Log.i(TAG, "no location permission");
 
             //start location permission activity
@@ -171,7 +175,7 @@ public class ReporterService extends Service {
         Log.d(TAG, "has location perm");
 
         //check for location setting
-        if(!isLocationSettingOn()){
+        if (!isLocationSettingOn()) {
             Log.i(TAG, "no location setting");
 
             //start location setting activity
@@ -184,7 +188,7 @@ public class ReporterService extends Service {
 
 
         //check for write permissions
-        if(!hasWritePermissions()){
+        if (!hasWritePermissions()) {
             Log.i(TAG, "no write permission");
 
             //start location permission activity
@@ -195,11 +199,11 @@ public class ReporterService extends Service {
 
         //check the command flag?
         String cmd = intent.getStringExtra(COMMAND_KEY);
-        if(cmd != null){
+        if (cmd != null) {
             Log.i(TAG, "Command is:" + cmd);
 
-            switch( cmd ){
-                case ACTION_PERFORM_TASK:
+            switch (cmd) {
+                case ACTION_RECORD:
 
                     //get location
                     //get battery
@@ -220,9 +224,9 @@ public class ReporterService extends Service {
     }
 
 
-    private void scheduleNext(){
+    private void scheduleNext() {
 //        Intent nextIntent = new Intent(this, ReporterService.class);
-//        nextIntent.putExtra(ReporterService.COMMAND_KEY, ReporterService.ACTION_PERFORM_TASK);
+//        nextIntent.putExtra(ReporterService.COMMAND_KEY, ReporterService.ACTION_RECORD);
 //        Scheduler.scheduleServiceIntent(this, nextIntent, 5000);
         Utils.scheduleNextTask(this);
     }
@@ -237,34 +241,25 @@ public class ReporterService extends Service {
         try {
             mFusedLocationClient.getLastLocation()
 
-                    .addOnSuccessListener( location -> {
-                        mLocation = location;
-                        Log.d(TAG, "get location success: \n" + location);
-                        logCurrentState();
-                    } )
-                    .addOnFailureListener((nullLocation) -> {
-                        Log.e(TAG, "get location failed");
-                        logCurrentState();
+                    .addOnCompleteListener(new OnCompleteListener<Location>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Location> task) {
+                            if (task.isSuccessful() && task.getResult() != null) {
+                                mLocation = task.getResult();
+                            } else {
+                                Log.w(TAG, "Failed to get location.");
+                            }
+                            logCurrentState();
+                        }
                     });
 
-//                    .addOnCompleteListener(new OnCompleteListener<Location>() {
-//                        @Override
-//                        public void onComplete(@NonNull Task<Location> task) {
-//                            if (task.isSuccessful() && task.getResult() != null) {
-//                                mLocation = task.getResult();
-//                            } else {
-//                                Log.w(TAG, "Failed to get location.");
-//                            }
-//                            logCurrentState();
-//                        }
-//                    });
 
         } catch (SecurityException unlikely) {
             Log.e(TAG, "Lost location permission." + unlikely);
         }
     }
 
-    private void logCurrentState(){
+    private void logCurrentState() {
 
         GsonBuilder builder = new GsonBuilder();
 //        builder.setPrettyPrinting();
@@ -272,10 +267,9 @@ public class ReporterService extends Service {
 
 
         LocationModel locModel;
-        if (mLocation != null){
-            locModel= new LocationModel(mLocation);
-        }
-        else{
+        if (mLocation != null) {
+            locModel = new LocationModel(mLocation);
+        } else {
             locModel = new LocationModel();
         }
 
@@ -287,7 +281,7 @@ public class ReporterService extends Service {
         SDLog.d(gson.toJson(model));
     }
 
-    private BatteryStats getBatteryStats(){
+    private BatteryStats getBatteryStats() {
         IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = this.registerReceiver(null, ifilter);
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
@@ -296,7 +290,7 @@ public class ReporterService extends Service {
         return batt;
     }
 
-    private int getChargeCounterLeft(Context context){
+    private int getChargeCounterLeft(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             BatteryManager mBatteryManager = (BatteryManager) context.getSystemService(Context.BATTERY_SERVICE);
             Integer chargeCounter = mBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
@@ -305,7 +299,7 @@ public class ReporterService extends Service {
         return 0;
     }
 
-    private int getBatteryCapacity(Context context){
+    private int getBatteryCapacity(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             BatteryManager mBatteryManager = (BatteryManager) context.getSystemService(Context.BATTERY_SERVICE);
             Integer capacity = mBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
@@ -320,10 +314,10 @@ public class ReporterService extends Service {
             Integer chargeCounter = mBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
             Integer capacity = mBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
 
-            if(chargeCounter == Integer.MIN_VALUE || capacity == Integer.MIN_VALUE)
+            if (chargeCounter == Integer.MIN_VALUE || capacity == Integer.MIN_VALUE)
                 return 0;
 
-            return (chargeCounter/capacity) *100;
+            return (chargeCounter / capacity) * 100;
         }
         return 0;
     }

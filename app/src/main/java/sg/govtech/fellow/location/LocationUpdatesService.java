@@ -79,6 +79,7 @@ public class LocationUpdatesService extends Service {
     public static final String COMMAND_KEY = PACKAGE_NAME + "_CMD";
     public static final String ACTION_START = PACKAGE_NAME + "_START";
     public static final String ACTION_STOP = PACKAGE_NAME + "_STOP";
+    public static final String ACTION_RECORD = PACKAGE_NAME + "_RECORD";
 
     public static final String CHANNEL_LOCATION_SERVICE = "Fellow Foreground Location Service";
 
@@ -246,9 +247,17 @@ public class LocationUpdatesService extends Service {
                     else{
                         Log.i(TAG, "Not requesting updates??");
                     }
+
+                    logCurrentState();
+                    Utils.scheduleNextTask(this);
+                    break;
+
+                case ACTION_RECORD:
+                    logCurrentState();
+                    Utils.scheduleNextTask(this);
                     break;
                 default:
-                    Log.i(TAG, "Not starting service");
+                    Log.i(TAG, "Nothing to do");
             }
         }
 
@@ -414,7 +423,12 @@ public class LocationUpdatesService extends Service {
 //        builder.setPrettyPrinting();
         Gson gson = builder.create();
 
-        LocationModel locModel = new LocationModel(mLocation);
+        LocationModel locModel;
+        if (mLocation != null) {
+            locModel = new LocationModel(mLocation);
+        } else {
+            locModel = new LocationModel();
+        }
         BatteryStats batt = getBatteryStats();
 
         DataReportingModel model = new DataReportingModel(locModel, batt);
@@ -424,7 +438,7 @@ public class LocationUpdatesService extends Service {
     }
 
     private void onNewLocation(Location location) {
-//        Log.i(TAG, "New location: " + location);
+        Log.i(TAG, "New location: " + location);
 
         mLocation = location;
 
