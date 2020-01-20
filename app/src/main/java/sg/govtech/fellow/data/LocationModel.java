@@ -25,6 +25,8 @@ public class LocationModel {
 
     String provider;
 
+    String status;
+
     public LocationModel(Location location){
         this.latitude = location.getLatitude();
         this.longitude = location.getLongitude();
@@ -42,7 +44,12 @@ public class LocationModel {
             this.bearingAccuracy = location.getBearingAccuracyDegrees();
         }
 
+        this.status = "VALID";
+    }
 
+    public LocationModel() {
+        super();
+        this.status = "INVALID";
     }
 }
 

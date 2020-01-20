@@ -21,12 +21,9 @@ import android.util.Log;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import androidx.annotation.NonNull;
 import pub.devrel.easypermissions.EasyPermissions;
 import sg.govtech.fellow.data.BatteryStats;
 import sg.govtech.fellow.data.DataReportingModel;
@@ -209,6 +206,10 @@ public class ReporterService extends Service {
                     //get cell towers
                     //get wifi?
 
+//                    logCurrentState();
+
+                    getLastLocation();
+                    scheduleNext();
                     break;
                 default:
                     Log.i(TAG, "Not starting service");
@@ -216,6 +217,14 @@ public class ReporterService extends Service {
         }
 
         return START_NOT_STICKY;
+    }
+
+
+    private void scheduleNext(){
+//        Intent nextIntent = new Intent(this, ReporterService.class);
+//        nextIntent.putExtra(ReporterService.COMMAND_KEY, ReporterService.ACTION_PERFORM_TASK);
+//        Scheduler.scheduleServiceIntent(this, nextIntent, 5000);
+        Utils.scheduleNextTask(this);
     }
 
     @Override
@@ -227,16 +236,29 @@ public class ReporterService extends Service {
     private void getLastLocation() {
         try {
             mFusedLocationClient.getLastLocation()
-                    .addOnCompleteListener(new OnCompleteListener<Location>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Location> task) {
-                            if (task.isSuccessful() && task.getResult() != null) {
-                                mLocation = task.getResult();
-                            } else {
-                                Log.w(TAG, "Failed to get location.");
-                            }
-                        }
+
+                    .addOnSuccessListener( location -> {
+                        mLocation = location;
+                        Log.d(TAG, "get location success: \n" + location);
+                        logCurrentState();
+                    } )
+                    .addOnFailureListener((nullLocation) -> {
+                        Log.e(TAG, "get location failed");
+                        logCurrentState();
                     });
+
+//                    .addOnCompleteListener(new OnCompleteListener<Location>() {
+//                        @Override
+//                        public void onComplete(@NonNull Task<Location> task) {
+//                            if (task.isSuccessful() && task.getResult() != null) {
+//                                mLocation = task.getResult();
+//                            } else {
+//                                Log.w(TAG, "Failed to get location.");
+//                            }
+//                            logCurrentState();
+//                        }
+//                    });
+
         } catch (SecurityException unlikely) {
             Log.e(TAG, "Lost location permission." + unlikely);
         }
@@ -248,7 +270,15 @@ public class ReporterService extends Service {
 //        builder.setPrettyPrinting();
         Gson gson = builder.create();
 
-        LocationModel locModel = new LocationModel(mLocation);
+
+        LocationModel locModel;
+        if (mLocation != null){
+            locModel= new LocationModel(mLocation);
+        }
+        else{
+            locModel = new LocationModel();
+        }
+
         BatteryStats batt = getBatteryStats();
 
         DataReportingModel model = new DataReportingModel(locModel, batt);

@@ -10,6 +10,7 @@ import java.util.Date;
 
 import sg.govtech.fellow.R;
 import sg.govtech.fellow.reporter.ReporterService;
+import sg.govtech.fellow.scheduler.Scheduler;
 
 //https://github.com/android/location-samples/blob/432d3b72b8c058f220416958b444274ddd186abd/LocationUpdatesForegroundService/app/src/main/java/com/google/android/gms/location/sample/locationupdatesforegroundservice/Utils.java
 public class Utils {
@@ -52,9 +53,12 @@ public class Utils {
     }
 
     public static void startLocationService(Context context) {
-        Intent intent = new Intent(context, LocationUpdatesService.class);
-        intent.putExtra(LocationUpdatesService.COMMAND_KEY, LocationUpdatesService.ACTION_START);
-        context.startService(intent);
+//        Intent intent = new Intent(context, LocationUpdatesService.class);
+//        intent.putExtra(LocationUpdatesService.COMMAND_KEY, LocationUpdatesService.ACTION_START);
+//        context.startService(intent);
+
+        startScheduledService(context);
+
     }
 
     public static void stopLocationService(Context context) {
@@ -64,10 +68,20 @@ public class Utils {
     }
 
     public static void startScheduledService(Context context){
-        Intent intent = new Intent(context, LocationUpdatesService.class);
+        Intent intent = new Intent(context, ReporterService.class);
         intent.putExtra(ReporterService.COMMAND_KEY, ReporterService.ACTION_PERFORM_TASK);
         context.startService(intent);
     }
 
+    public static void scheduleNextTask(Context context){
+        Intent nextIntent = new Intent(context, ReporterService.class);
+        nextIntent.putExtra(ReporterService.COMMAND_KEY, ReporterService.ACTION_PERFORM_TASK);
+        Scheduler.scheduleServiceIntent(context, nextIntent, 5000);
+    }
+
+    public static void cancelNextTask(Context context){
+        Intent nextIntent = new Intent(context, ReporterService.class);
+        Scheduler.cancelServiceIntent(context, nextIntent);
+    }
 
 }

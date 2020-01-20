@@ -32,7 +32,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -94,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
 
         findViewById(R.id.stop_service).setOnClickListener((View v) -> {
             Utils.stopLocationService(MainActivity.this);
+            Utils.cancelNextTask(MainActivity.this);
         });
 
 
@@ -128,8 +128,23 @@ public class MainActivity extends AppCompatActivity {
 // Type of the network
         int phoneTypeInt = tel.getPhoneType();
         String phoneType = null;
-        phoneType = phoneTypeInt == TelephonyManager.PHONE_TYPE_GSM ? "gsm" : phoneType;
-        phoneType = phoneTypeInt == TelephonyManager.PHONE_TYPE_CDMA ? "cdma" : phoneType;
+        switch(phoneTypeInt){
+            case TelephonyManager.PHONE_TYPE_GSM:
+                phoneType = "GSM";
+                break;
+            case TelephonyManager.PHONE_TYPE_CDMA:
+                phoneType = "CDMA";
+                break;
+            case TelephonyManager.PHONE_TYPE_SIP:
+                phoneType = "SIP";
+                break;
+            case TelephonyManager.PHONE_TYPE_NONE:
+                phoneType = "NONE";
+                break;
+            default:
+                phoneType = "UNDEFINED";
+                break;
+        }
 
         //from Android M up must use getAllCellInfo
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
@@ -149,6 +164,8 @@ public class MainActivity extends AppCompatActivity {
 
         } else {
             Log.d(TAG, "using M cell detection");
+
+            //https://developer.android.com/reference/android/telephony/CellSignalStrengthLte.html
 
             List<CellInfo> infos = tel.getAllCellInfo();
 
